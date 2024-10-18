@@ -35,13 +35,14 @@ with st.expander("Heavy-duty Vehicle Count (HDV)", expanded=True):
 with st.expander("Light-duty Vehicle Count (LDV)", expanded=True):
     ldv_count = st.slider("Select LDV Count", 0, 19, 0)  # Updated range 0-19 for LDV
 
-# Calculate the probability and confidence intervals using the logistic function
+# Toggle for showing/hiding confidence intervals
+show_ci = st.checkbox("Show Confidence Intervals", value=True)
+
+# Calculate the probability using the logistic function
 probability = logistic_function(intercept, hdv_coeff, ldv_coeff, hdv_count, ldv_count)
-lower_ci, upper_ci = calculate_ci(probability, standard_error)
 
 # Display the probability result
 st.write(f"**Probability of bird returning to the nest:** {probability:.2%}")
-st.write(f"**95% Confidence Interval:** ({lower_ci:.2%}, {upper_ci:.2%})")
 
 # Generate a range of values for HDV and LDV to show the effect on probability
 hdv_values = np.arange(0, 19)  # HDV range (0 to 18)
@@ -49,40 +50,63 @@ ldv_values = np.arange(0, 20)  # LDV range (0 to 19)
 
 # Calculate probabilities and confidence intervals for the entire range of HDV and LDV counts
 hdv_probabilities = [logistic_function(intercept, hdv_coeff, ldv_coeff, hdv, ldv_count) for hdv in hdv_values]
-hdv_lower_ci = [calculate_ci(p, standard_error)[0] for p in hdv_probabilities]
-hdv_upper_ci = [calculate_ci(p, standard_error)[1] for p in hdv_probabilities]
-
 ldv_probabilities = [logistic_function(intercept, hdv_coeff, ldv_coeff, hdv_count, ldv) for ldv in ldv_values]
-ldv_lower_ci = [calculate_ci(p, standard_error)[0] for p in ldv_probabilities]
-ldv_upper_ci = [calculate_ci(p, standard_error)[1] for p in ldv_probabilities]
 
-# Plot the probability of decrease for both HDV and LDV with confidence intervals
-fig = go.Figure()
+# If CI is enabled, calculate the CI values
+if show_ci:
+    hdv_lower_ci = [calculate_ci(p, standard_error)[0] for p in hdv_probabilities]
+    hdv_upper_ci = [calculate_ci(p, standard_error)[1] for p in hdv_probabilities]
+    ldv_lower_ci = [calculate_ci(p, standard_error)[0] for p in ldv_probabilities]
+    ldv_upper_ci = [calculate_ci(p, standard_error)[1] for p in ldv_probabilities]
+
+# Plot HDV Probability
+hdv_fig = go.Figure()
 
 # Add HDV probability line
-fig.add_trace(go.Scatter(x=hdv_values, y=hdv_probabilities, mode='lines', name='HDV Probability',
-                         line=dict(color='firebrick', width=2)))
-# Add shaded CI for HDV
-fig.add_trace(go.Scatter(x=hdv_values, y=hdv_upper_ci, mode='lines', fill=None, line=dict(color='firebrick', width=0), showlegend=False))
-fig.add_trace(go.Scatter(x=hdv_values, y=hdv_lower_ci, mode='lines', fill='tonexty', line=dict(color='firebrick', width=0), name='HDV CI', showlegend=True))
+hdv_fig.add_trace(go.Scatter(x=hdv_values, y=hdv_probabilities, mode='lines', name='HDV Probability',
+                             line=dict(color='firebrick', width=2)))
 
-# Add LDV probability line
-fig.add_trace(go.Scatter(x=ldv_values, y=ldv_probabilities, mode='lines', name='LDV Probability',
-                         line=dict(color='royalblue', width=2)))
-# Add shaded CI for LDV
-fig.add_trace(go.Scatter(x=ldv_values, y=ldv_upper_ci, mode='lines', fill=None, line=dict(color='royalblue', width=0), showlegend=False))
-fig.add_trace(go.Scatter(x=ldv_values, y=ldv_lower_ci, mode='lines', fill='tonexty', line=dict(color='royalblue', width=0), name='LDV CI', showlegend=True))
+# Add dashed CI lines if CI is enabled
+if show_ci:
+    hdv_fig.add_trace(go.Scatter(x=hdv_values, y=hdv_upper_ci, mode='lines', name='HDV Upper CI', 
+                                 line=dict(color='firebrick', dash='dash', width=1)))
+    hdv_fig.add_trace(go.Scatter(x=hdv_values, y=hdv_lower_ci, mode='lines', name='HDV Lower CI', 
+                                 line=dict(color='firebrick', dash='dash', width=1)))
 
-# Customize the plot layout
-fig.update_layout(
-    title="Effect of HDV and LDV on Bird Return Probability with Confidence Intervals",
-    xaxis_title="Vehicle Count",
+# Customize the HDV plot layout
+hdv_fig.update_layout(
+    title="Effect of HDV on Bird Return Probability",
+    xaxis_title="HDV Count",
     yaxis_title="Probability of Bird Returning to Nest",
-    legend_title="Vehicle Type",
     font=dict(size=12),
-    xaxis=dict(tickvals=np.arange(0, max(len(hdv_values), len(ldv_values)), 1)),  # Ensure tick marks for every count
     yaxis=dict(range=[0, 1])  # Probability should be between 0 and 1
 )
 
-# Display the plot in Streamlit
-st.plotly_chart(fig)
+# Plot LDV Probability
+ldv_fig = go.Figure()
+
+# Add LDV probability line
+ldv_fig.add_trace(go.Scatter(x=ldv_values, y=ldv_probabilities, mode='lines', name='LDV Probability',
+                             line=dict(color='royalblue', width=2)))
+
+# Add dashed CI lines if CI is enabled
+if show_ci:
+    ldv_fig.add_trace(go.Scatter(x=ldv_values, y=ldv_upper_ci, mode='lines', name='LDV Upper CI', 
+                                 line=dict(color='royalblue', dash='dash', width=1)))
+    ldv_fig.add_trace(go.Scatter(x=ldv_values, y=ldv_lower_ci, mode='lines', name='LDV Lower CI', 
+                                 line=dict(color='royalblue', dash='dash', width=1)))
+
+# Customize the LDV plot layout
+ldv_fig.update_layout(
+    title="Effect of LDV on Bird Return Probability",
+    xaxis_title="LDV Count",
+    yaxis_title="Probability of Bird Returning to Nest",
+    font=dict(size=12),
+    yaxis=dict(range=[0, 1])  # Probability should be between 0 and 1
+)
+
+# Display the HDV plot
+st.plotly_chart(hdv_fig)
+
+# Display the LDV plot
+st.plotly_chart(ldv_fig)
