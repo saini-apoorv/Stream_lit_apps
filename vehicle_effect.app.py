@@ -38,21 +38,26 @@ with st.expander("Light-duty Vehicle Count (LDV)", expanded=True):
 # Toggle for showing/hiding confidence intervals
 show_ci = st.checkbox("Show Confidence Intervals", value=True)
 
-# Calculate the probability using the logistic function
-probability = logistic_function(intercept, hdv_coeff, ldv_coeff, hdv_count, ldv_count)
+# Calculate the probability for the selected HDV and LDV counts
+hdv_probability = logistic_function(intercept, hdv_coeff, ldv_coeff, hdv_count, 0)  # Treat LDV as 0
+ldv_probability = logistic_function(intercept, hdv_coeff, ldv_coeff, 0, ldv_count)  # Treat HDV as 0
 
-# Display the probability result
-st.write(f"**Probability of bird returning to the nest:** {probability:.2%}")
+# Display the probability results
+st.write(f"**Probability of bird returning to the nest with HDV count {hdv_count}:** {hdv_probability:.2%}")
+st.write(f"**Probability of bird returning to the nest with LDV count {ldv_count}:** {ldv_probability:.2%}")
 
 # Generate a range of values for HDV and LDV to show the effect on probability
 hdv_values = np.arange(0, 19)  # HDV range (0 to 18)
 ldv_values = np.arange(0, 20)  # LDV range (0 to 19)
 
 # Calculate probabilities and confidence intervals for the entire range of HDV and LDV counts
-hdv_probabilities = [logistic_function(intercept, hdv_coeff, ldv_coeff, hdv, ldv_count) for hdv in hdv_values]
-ldv_probabilities = [logistic_function(intercept, hdv_coeff, ldv_coeff, hdv_count, ldv) for ldv in ldv_values]
+hdv_probabilities = [logistic_function(intercept, hdv_coeff, ldv_coeff, hdv, 0) for hdv in hdv_values]  # LDV set to 0
+ldv_probabilities = [logistic_function(intercept, hdv_coeff, ldv_coeff, 0, ldv) for ldv in ldv_values]  # HDV set to 0
 
 # If CI is enabled, calculate the CI values
+hdv_lower_ci, hdv_upper_ci = (None, None)
+ldv_lower_ci, ldv_upper_ci = (None, None)
+
 if show_ci:
     hdv_lower_ci = [calculate_ci(p, standard_error)[0] for p in hdv_probabilities]
     hdv_upper_ci = [calculate_ci(p, standard_error)[1] for p in hdv_probabilities]
