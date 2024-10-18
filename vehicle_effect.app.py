@@ -24,7 +24,7 @@ ldv_coeff = -0.13555
 standard_error = 0.05  # Assuming a rough standard error for demonstration
 
 # Streamlit app layout
-st.title("Effect of vehicles on the probability of birds returning to nest")
+st.title("Bird Return to Nest Prediction with Confidence Intervals")
 st.write("Adjust the vehicle counts to see how they affect the probability of birds returning to the nest.")
 
 # Section 1: Heavy-duty Vehicle Count (HDV)
@@ -42,9 +42,9 @@ show_ci = st.checkbox("Show Confidence Intervals", value=True)
 hdv_probability = logistic_function(intercept, hdv_coeff, ldv_coeff, hdv_count, 0)  # Treat LDV as 0
 ldv_probability = logistic_function(intercept, hdv_coeff, ldv_coeff, 0, ldv_count)  # Treat HDV as 0
 
-# Display the probability results
-st.write(f"**Probability of bird returning to the nest with HDV count {hdv_count}:** {hdv_probability:.2%}")
-st.write(f"**Probability of bird returning to the nest with LDV count {ldv_count}:** {ldv_probability:.2%}")
+# Display the probability results as decimals
+st.write(f"**Probability of bird returning to the nest with HDV count {hdv_count}:** {hdv_probability:.4f}")
+st.write(f"**Probability of bird returning to the nest with LDV count {ldv_count}:** {ldv_probability:.4f}")
 
 # Generate a range of values for HDV and LDV to show the effect on probability
 hdv_values = np.arange(0, 19)  # HDV range (0 to 18)
@@ -71,6 +71,10 @@ hdv_fig = go.Figure()
 hdv_fig.add_trace(go.Scatter(x=hdv_values, y=hdv_probabilities, mode='lines', name='HDV Probability',
                              line=dict(color='firebrick', width=2)))
 
+# Add marker for the current HDV count probability
+hdv_fig.add_trace(go.Scatter(x=[hdv_count], y=[hdv_probability], mode='markers', name='Current HDV Probability',
+                             marker=dict(color='firebrick', size=10, symbol='circle')))
+
 # Add dashed CI lines if CI is enabled
 if show_ci:
     hdv_fig.add_trace(go.Scatter(x=hdv_values, y=hdv_upper_ci, mode='lines', name='HDV Upper CI', 
@@ -93,6 +97,10 @@ ldv_fig = go.Figure()
 # Add LDV probability line
 ldv_fig.add_trace(go.Scatter(x=ldv_values, y=ldv_probabilities, mode='lines', name='LDV Probability',
                              line=dict(color='royalblue', width=2)))
+
+# Add marker for the current LDV count probability
+ldv_fig.add_trace(go.Scatter(x=[ldv_count], y=[ldv_probability], mode='markers', name='Current LDV Probability',
+                             marker=dict(color='royalblue', size=10, symbol='circle')))
 
 # Add dashed CI lines if CI is enabled
 if show_ci:
