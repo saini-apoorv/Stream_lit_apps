@@ -24,7 +24,7 @@ ldv_coeff = -0.13555
 standard_error = 0.05  # Assuming a rough standard error for demonstration
 
 # Streamlit app layout
-st.title("Bird Return to Nest Prediction with Confidence Intervals")
+st.title("Effect of vehicles on the probability of birds returning to nest")
 st.write("Adjust the vehicle counts to see how they affect the probability of birds returning to the nest.")
 
 # Section 1: Heavy-duty Vehicle Count (HDV)
